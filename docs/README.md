@@ -1,150 +1,82 @@
-This README gives an overview of how to build and contribute to the documentation of Apache Flink.
+## 2018-12-21周会
+### 上周跟进
+- 已完成。晋级事项
+- 已完成。元旦，春节值班人员
+- 待维护。OKR攻坚文档记录
 
-The documentation is included with the source of Apache Flink in order to ensure that you always
-have docs corresponding to your checked out version. The online documentation at
-http://flink.apache.org/ is also generated from the files found here.
+### 周会内容
+- **下周分享** 郭昌佶提前申请二维码&订会议室；督促听众 报名/签到/评分
+- 本周iowait问题定位以及相关解决方案落实
+- Q1工作OKR制定以及沟通确认
+- Sqoop任务问题过堂及定位
+-
 
-# Requirements
+### 下周跟进事项
+- 改完socketTimeout, sqoop worker 目前出现501,
 
-The dependencies are declared in the Gemfile in this directory. We use Markdown
-to write and Jekyll to translate the documentation to static HTML. All required
-dependencies are installed locally when you build the documentation through the
-`build_docs.sh` script. If you want to install the software manually, use Ruby's
-Bundler Gem to install all dependencies:
+### 风险点
+-
 
-    gem install bundler
-    bundle install
-
-Note that in Ubuntu based systems, it may be necessary to install the `ruby-dev`
-via apt to build native code.
-
-# Using Dockerized Jekyll
-
-We dockerized the jekyll environment above. If you have [docker](https://docs.docker.com/),
-you can run following command to start the container.
-
-```
-cd flink/docs/docker
-./run.sh
-```
-
-It takes a few moment to build the image for the first time, but will be a second from the second time.
-The run.sh command brings you in a bash session where you can run following doc commands.
-
-# Build
-
-The `docs/build_docs.sh` script installs dependencies locally, calls Jekyll, and
-generates the documentation in `docs/content`. You can then point your browser
-to `docs/content/index.html` and start reading.
-
-If you call the script with the preview flag `build_docs.sh -p`, Jekyll will
-start a web server at `localhost:4000` and watch the docs directory for
-updates. Use this mode to preview changes locally. 
-
-If you have ruby 2.0 or greater, 
-you can call the script with the incremental flag `build_docs.sh -i`.
-Jekyll will then serve a live preview at `localhost:4000`,
-and it will be much faster because it will only rebuild the pages corresponding
-to files that are modified. Note that if you are making changes that affect
-the sidebar navigation, you'll have to build the entire site to see
-those changes reflected on every page.
-
-## Generate configuration tables
-
-Configuration descriptions are auto generated from code. To trigger the generation you need to run:
-
-```
-mvn -Pgenerate-config-docs install
-```
-
-The resulting html files will be written to `_include/generated`. Tables are regenerated each time the command is invoked.
-These tables can be directly included into the documentation:
-
-```
-{% include generated/file_name.html %}
-```
-
-# Contribute
-
-## Markdown
-
-The documentation pages are written in [Markdown](http://daringfireball.net/projects/markdown/syntax). It is possible to use [GitHub flavored syntax](http://github.github.com/github-flavored-markdown) and intermix plain html.
-
-## Front matter
-
-In addition to Markdown, every page contains a Jekyll front matter, which specifies the title of the page and the layout to use. The title is used as the top-level heading for the page. The default layout is `plain` (found in `_layouts`).
-
-    ---
-    title: "Title of the Page"
-    ---
-
-Furthermore, you can access variables found in `docs/_config.yml` as follows:
-
-    {{ site.NAME }}
-
-This will be replaced with the value of the variable called `NAME` when generating the docs.
-
-## Structure
-
-### Page
-
-#### Headings
-
-All documents are structured with headings. From these headings, you can automatically generate a page table of contents (see below).
-
-```
-# Level-1 Heading  <- Used for the title of the page (don't use this)
-## Level-2 Heading <- Start with this one
-### Level-3 heading
-#### Level-4 heading
-##### Level-5 heading
-```
-
-Please stick to the "logical order" when using the headlines, e.g. start with level-2 headings and use level-3 headings for subsections, etc. Don't use a different ordering, because you don't like how a headline looks.
-
-#### Table of Contents
-
-    * This will be replaced by the TOC
-    {:toc}
+### 纪要
+- OKR攻坚文档记录
 
 
-Add this markup (both lines) to the document in order to generate a table of contents for the page. Headings until level 3 headings are included.
 
-You can exclude a heading from the table of contents:
+<br>
+<br>
+<br>
 
-    # Excluded heading
-    {:.no_toc}
+---
 
-#### Back to Top
+1. 跟进checkpoint时长问题，10min，模拟环境，定位问题
+2. 修复flink1.6.x版本 固定重启策略，间隔时长为0, 导致程序卡死问题，已提交
+3. 跟进elsticsearch5.x-connector-trainsport线程泄露问题，根本原因已找到，netty为close，修复复杂
+   netty完成初始化，紧接着进行检测每个 host，未有可用节点，直接抛runntime，但是netty未释放
+4. kakfa的checkpoint，不能恢复至算子的异常定位，未解决。在模拟
+5. 吕为盛、黄淦，解释main方法log4j日志问题，属于解析层，不会体现在log中
+6. 交通尚苏定位依赖问题，provided
+7. 酒店何富贵，flink打样协助
+8. 解决timeout sqoop进程问题，采用生乾找到的命令打样，
 
-	{% top %}
 
-This will be replaced by a default back to top link. It is recommended to use these links at least at the end of each level-2 section.
 
-#### Labels
 
-	{% info %}
-	{% warn %}
 
-These will be replaced by a info or warning label. You can change the text of the label by providing an argument:
 
-    {% info Recommendation %}
 
-### Documentation
 
-#### Navigation
 
-The navigation on the left side of the docs is automatically generated when building the docs. You can modify the markup in `_include/sidenav.html`.
 
-The structure of the navigation is determined by the front matter of all pages. The fields used to determine the structure are:
+  
 
-- `nav-id` => ID of this page. Other pages can use this ID as their parent ID.
-- `nav-parent_id` => ID of the parent. This page will be listed under the page with id `nav-parent_id`.
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
-Level 0 is made up of all pages, which have nav-parent_id set to `root`. There is no limitation on how many levels you can nest.
 
-The `title` of the page is used as the default link text. You can override this via `nav-title`. The relative position per navigational level is determined by `nav-pos`.
 
-If you have a page with sub pages, the link target will be used to expand the sub level navigation. If you want to actually add a link to the page as well, you can add the `nav-show_overview: true` field to the front matter. This will then add an `Overview` sub page to the expanded list.
 
-The nesting is also used for the breadcrumbs like `Application Development > Libraries > Machine Learning > Optimization`.
+
+
+
+
+
+
+
+
+
+
+
