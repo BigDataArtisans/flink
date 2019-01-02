@@ -567,7 +567,7 @@ val intersect2 = graph1.intersect(graph2, false)
 </div>
 </div>
 
--{% top %}
+{% top %}
 
 Graph Mutations
 -----------
