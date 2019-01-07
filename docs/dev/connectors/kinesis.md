@@ -52,15 +52,6 @@ cd flink-dist
 mvn clean install -Pinclude-kinesis -DskipTests
 {% endhighlight %}
 
-<span class="label label-danger">Attention</span> For Flink versions 1.4.2 and below, the KPL client version
-used by default in the Kinesis connectors, KPL 0.12.5, is no longer supported by AWS Kinesis Streams
-(see [here](https://docs.aws.amazon.com/streams/latest/dev/kinesis-kpl-upgrades.html)).
-This means that when building the Kinesis connector, you will need to specify a higher version KPL client (above 0.12.6)
-in order for the Flink Kinesis Producer to work. You can do this by speciyfing the preferred version via the
-`aws.kinesis-kpl.version` property, like so:
-{% highlight bash %}
-mvn clean install -Pinclude-kinesis -Daws.kinesis-kpl.version=0.12.6 -DskipTests
-{% endhighlight %}
 
 The streaming connectors are not part of the binary distribution. See how to link with them for cluster
 execution [here]({{site.baseurl}}/dev/linking.html).
@@ -127,11 +118,6 @@ if the number of shards is smaller than the parallelism of the consumer,
 then some consumer subtasks will simply be idle and wait until it gets assigned
 new shards (i.e., when the streams are resharded to increase the
 number of shards for higher provisioned Kinesis service throughput).
-
-Also note that the assignment of shards to subtasks may not be optimal when
-shard IDs are not consecutive (as result of dynamic re-sharding in Kinesis).
-For cases where skew in the assignment leads to significant imbalanced consumption,
-a custom implementation of `KinesisShardAssigner` can be set on the consumer.
 
 ### Configuring Starting Position
 

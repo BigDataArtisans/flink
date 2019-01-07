@@ -18,17 +18,12 @@
 
 package org.apache.flink.table.plan.nodes.datastream
 
-import java.util.{List => JList}
-
 import org.apache.calcite.plan.{RelOptCluster, RelTraitSet}
-import org.apache.calcite.rel.core.{SetOp, Union}
-import org.apache.calcite.rel.{RelNode, RelWriter}
+import org.apache.calcite.rel.{BiRel, RelNode, RelWriter}
 import org.apache.flink.streaming.api.datastream.DataStream
-import org.apache.flink.table.api.{StreamQueryConfig, StreamTableEnvironment, TableException}
+import org.apache.flink.table.api.{StreamQueryConfig, StreamTableEnvironment}
 import org.apache.flink.table.plan.schema.RowSchema
 import org.apache.flink.table.runtime.types.CRow
-
-import scala.collection.JavaConverters._
 
 /**
   * Flink RelNode which matches along with Union.
@@ -37,24 +32,22 @@ import scala.collection.JavaConverters._
 class DataStreamUnion(
     cluster: RelOptCluster,
     traitSet: RelTraitSet,
-    inputs: JList[RelNode],
+    leftNode: RelNode,
+    rightNode: RelNode,
     schema: RowSchema)
-  extends Union(cluster, traitSet, inputs, true)
+  extends BiRel(cluster, traitSet, leftNode, rightNode)
   with DataStreamRel {
 
   override def deriveRowType() = schema.relDataType
 
-  override def copy(traitSet: RelTraitSet, inputs: JList[RelNode], all: Boolean): SetOp = {
-
-    if (!all) {
-      throw new TableException("DataStreamUnion only supports UNION ALL.")
-    }
-
+  override def copy(traitSet: RelTraitSet, inputs: java.util.List[RelNode]): RelNode = {
     new DataStreamUnion(
       cluster,
       traitSet,
-      inputs,
-      schema)
+      inputs.get(0),
+      inputs.get(1),
+      schema
+    )
   }
 
   override def explainTerms(pw: RelWriter): RelWriter = {
@@ -69,10 +62,9 @@ class DataStreamUnion(
       tableEnv: StreamTableEnvironment,
       queryConfig: StreamQueryConfig): DataStream[CRow] = {
 
-    getInputs
-      .asScala
-      .map(_.asInstanceOf[DataStreamRel].translateToPlan(tableEnv, queryConfig))
-      .reduce((dataSetLeft, dataSetRight) => dataSetLeft.union(dataSetRight))
+    val leftDataSet = left.asInstanceOf[DataStreamRel].translateToPlan(tableEnv, queryConfig)
+    val rightDataSet = right.asInstanceOf[DataStreamRel].translateToPlan(tableEnv, queryConfig)
+    leftDataSet.union(rightDataSet)
   }
 
   private def unionSelectionToString: String = {

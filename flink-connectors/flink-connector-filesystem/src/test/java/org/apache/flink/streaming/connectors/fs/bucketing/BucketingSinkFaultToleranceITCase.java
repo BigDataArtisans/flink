@@ -51,8 +51,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.flink.streaming.connectors.fs.bucketing.BucketingSinkTestUtils.IN_PROGRESS_SUFFIX;
-import static org.apache.flink.streaming.connectors.fs.bucketing.BucketingSinkTestUtils.PENDING_SUFFIX;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -73,6 +71,9 @@ public class BucketingSinkFaultToleranceITCase extends StreamFaultToleranceTestB
 	private static org.apache.hadoop.fs.FileSystem dfs;
 
 	private static String outPath;
+
+	private static final String PENDING_SUFFIX = ".pending";
+	private static final String IN_PROGRESS_SUFFIX = ".in-progress";
 
 	@BeforeClass
 	public static void createHDFS() throws IOException {

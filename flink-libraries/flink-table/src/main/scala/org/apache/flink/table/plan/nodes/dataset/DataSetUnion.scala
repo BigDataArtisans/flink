@@ -18,15 +18,12 @@
 
 package org.apache.flink.table.plan.nodes.dataset
 
-import java.util.{List => JList}
-
 import org.apache.calcite.plan.{RelOptCluster, RelOptCost, RelOptPlanner, RelTraitSet}
 import org.apache.calcite.rel.`type`.RelDataType
-import org.apache.calcite.rel.core.{SetOp, Union}
 import org.apache.calcite.rel.metadata.RelMetadataQuery
-import org.apache.calcite.rel.{RelNode, RelWriter}
+import org.apache.calcite.rel.{BiRel, RelNode, RelWriter}
 import org.apache.flink.api.java.DataSet
-import org.apache.flink.table.api.{BatchTableEnvironment, TableException}
+import org.apache.flink.table.api.BatchTableEnvironment
 import org.apache.flink.types.Row
 
 import scala.collection.JavaConversions._
@@ -39,24 +36,22 @@ import scala.collection.JavaConverters._
 class DataSetUnion(
     cluster: RelOptCluster,
     traitSet: RelTraitSet,
-    inputs: JList[RelNode],
+    leftNode: RelNode,
+    rightNode: RelNode,
     rowRelDataType: RelDataType)
-  extends Union(cluster, traitSet, inputs, true)
+  extends BiRel(cluster, traitSet, leftNode, rightNode)
   with DataSetRel {
 
   override def deriveRowType() = rowRelDataType
 
-  override def copy(traitSet: RelTraitSet, inputs: JList[RelNode], all: Boolean): SetOp = {
-
-    if (!all) {
-      throw new TableException("DataSetUnion only supports UNION ALL.")
-    }
-
+  override def copy(traitSet: RelTraitSet, inputs: java.util.List[RelNode]): RelNode = {
     new DataSetUnion(
       cluster,
       traitSet,
-      inputs,
-      rowRelDataType)
+      inputs.get(0),
+      inputs.get(1),
+      rowRelDataType
+    )
   }
 
   override def toString: String = {
@@ -84,13 +79,14 @@ class DataSetUnion(
 
   override def translateToPlan(tableEnv: BatchTableEnvironment): DataSet[Row] = {
 
-    getInputs
-      .asScala
-      .map(_.asInstanceOf[DataSetRel].translateToPlan(tableEnv))
-      .reduce((dataSetLeft, dataSetRight) => dataSetLeft.union(dataSetRight))
+    val leftDataSet = left.asInstanceOf[DataSetRel].translateToPlan(tableEnv)
+    val rightDataSet = right.asInstanceOf[DataSetRel].translateToPlan(tableEnv)
+
+    leftDataSet.union(rightDataSet)
   }
 
   private def unionSelectionToString: String = {
     rowRelDataType.getFieldNames.asScala.toList.mkString(", ")
   }
+
 }

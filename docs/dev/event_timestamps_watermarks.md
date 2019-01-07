@@ -242,7 +242,7 @@ class BoundedOutOfOrdernessGenerator extends AssignerWithPeriodicWatermarks[MyEv
 
     val maxOutOfOrderness = 3500L // 3.5 seconds
 
-    var currentMaxTimestamp: Long = _
+    var currentMaxTimestamp: Long
 
     override def extractTimestamp(element: MyEvent, previousElementTimestamp: Long): Long = {
         val timestamp = element.getCreationTime()

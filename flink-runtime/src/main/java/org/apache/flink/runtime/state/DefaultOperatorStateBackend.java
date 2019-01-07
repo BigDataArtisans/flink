@@ -22,10 +22,13 @@ import org.apache.flink.annotation.Internal;
 import org.apache.flink.api.common.ExecutionConfig;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.typeinfo.TypeHint;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeutils.CompatibilityResult;
 import org.apache.flink.api.common.typeutils.CompatibilityUtil;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.common.typeutils.UnloadableDummyTypeSerializer;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.core.fs.CloseableRegistry;
 import org.apache.flink.core.fs.FSDataInputStream;
 import org.apache.flink.core.fs.FSDataOutputStream;
@@ -36,6 +39,7 @@ import org.apache.flink.core.memory.DataOutputViewStreamWrapper;
 import org.apache.flink.runtime.checkpoint.CheckpointOptions;
 import org.apache.flink.runtime.io.async.AbstractAsyncCallableWithResources;
 import org.apache.flink.runtime.io.async.AsyncStoppableTaskWithCallback;
+import org.apache.flink.streaming.connectors.kafka.internals.KafkaTopicPartition;
 import org.apache.flink.util.Preconditions;
 import org.apache.flink.util.StateMigrationException;
 
@@ -325,8 +329,17 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
 		return task;
 	}
 
+	ListStateDescriptor<Tuple2<KafkaTopicPartition, Long>> stateDescriptor = new ListStateDescriptor<>(
+		"topic-partition-offset-states",
+		TypeInformation.of(new TypeHint<Tuple2<KafkaTopicPartition, Long>>() {
+		}));
+
+
+
 	@Override
 	public void restore(Collection<OperatorStateHandle> restoreSnapshots) throws Exception {
+
+		stateDescriptor.initializeSerializerUnlessSet(new ExecutionConfig());
 
 		if (null == restoreSnapshots) {
 			return;
@@ -356,29 +369,39 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
 				// Recreate all PartitionableListStates from the meta info
 				for (RegisteredOperatorBackendStateMetaInfo.Snapshot<?> restoredMetaInfo : restoredMetaInfoSnapshots) {
 
-					if (restoredMetaInfo.getPartitionStateSerializer() == null ||
-							restoredMetaInfo.getPartitionStateSerializer() instanceof UnloadableDummyTypeSerializer) {
-
-						// must fail now if the previous serializer cannot be restored because there is no serializer
-						// capable of reading previous state
-						// TODO when eager state registration is in place, we can try to get a convert deserializer
-						// TODO from the newly registered serializer instead of simply failing here
-
-						throw new IOException("Unable to restore operator state [" + restoredMetaInfo.getName() + "]." +
-							" The previous serializer of the operator state must be present; the serializer could" +
-							" have been removed from the classpath, or its implementation have changed and could" +
-							" not be loaded. This is a temporary restriction that will be fixed in future versions.");
-					}
+//					if (restoredMetaInfo.getPartitionStateSerializer() == null ||
+//							restoredMetaInfo.getPartitionStateSerializer() instanceof UnloadableDummyTypeSerializer) {
+//
+//						// must fail now if the previous serializer cannot be restored because there is no serializer
+//						// capable of reading previous state
+//						// TODO when eager state registration is in place, we can try to get a convert deserializer
+//						// TODO from the newly registered serializer instead of simply failing here
+//
+//						throw new IOException("Unable to restore operator state [" + restoredMetaInfo.getName() + "]." +
+//							" The previous serializer of the operator state must be present; the serializer could" +
+//							" have been removed from the classpath, or its implementation have changed and could" +
+//							" not be loaded. This is a temporary restriction that will be fixed in future versions.");
+//					}
 
 					restoredStateMetaInfos.put(restoredMetaInfo.getName(), restoredMetaInfo);
 
 					PartitionableListState<?> listState = registeredStates.get(restoredMetaInfo.getName());
 
+
+
+
+
+
+
+
+
+
+
 					if (null == listState) {
 						listState = new PartitionableListState<>(
 								new RegisteredOperatorBackendStateMetaInfo<>(
 										restoredMetaInfo.getName(),
-										restoredMetaInfo.getPartitionStateSerializer(),
+									stateDescriptor.getElementSerializer(),
 										restoredMetaInfo.getAssignmentMode()));
 
 						registeredStates.put(listState.getStateMetaInfo().getName(), listState);

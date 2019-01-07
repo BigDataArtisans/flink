@@ -26,8 +26,6 @@ import org.apache.flink.table.plan.nodes.datastream.DataStreamUnion
 import org.apache.flink.table.plan.nodes.logical.FlinkLogicalUnion
 import org.apache.flink.table.plan.schema.RowSchema
 
-import scala.collection.JavaConverters._
-
 class DataStreamUnionRule
   extends ConverterRule(
     classOf[FlinkLogicalUnion],
@@ -39,17 +37,14 @@ class DataStreamUnionRule
   def convert(rel: RelNode): RelNode = {
     val union: FlinkLogicalUnion = rel.asInstanceOf[FlinkLogicalUnion]
     val traitSet: RelTraitSet = rel.getTraitSet.replace(FlinkConventions.DATASTREAM)
-
-    val newInputs = union
-      .getInputs
-      .asScala
-      .map(RelOptRule.convert(_, FlinkConventions.DATASTREAM))
-      .asJava
+    val convLeft: RelNode = RelOptRule.convert(union.getInput(0), FlinkConventions.DATASTREAM)
+    val convRight: RelNode = RelOptRule.convert(union.getInput(1), FlinkConventions.DATASTREAM)
 
     new DataStreamUnion(
       rel.getCluster,
       traitSet,
-      newInputs,
+      convLeft,
+      convRight,
       new RowSchema(rel.getRowType))
   }
 }

@@ -53,7 +53,8 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
 public class CurrentJobsOverviewHandler extends AbstractJsonRequestHandler implements LegacyRestHandler<DispatcherGateway, MultipleJobsDetails, EmptyMessageParameters> {
 
 	private static final String ALL_JOBS_REST_PATH = "/joboverview";
-	private static final String RUNNING_JOBS_REST_PATH = "/joboverview/running";
+	// private static final String RUNNING_JOBS_REST_PATH = "/joboverview/running";
+	private static final String RUNNING_JOBS_REST_PATH = "/jobs/overview";
 	private static final String COMPLETED_JOBS_REST_PATH = "/joboverview/completed";
 
 	private final Time timeout;

@@ -173,7 +173,7 @@ A `Table` is registered in a `TableEnvironment` as follows:
 StreamTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
 
 // Table is the result of a simple projection query 
-Table projTable = tableEnv.scan("X").select(...);
+Table projTable = tableEnv.scan("X").project(...);
 
 // register the Table projTable as table "projectedX"
 tableEnv.registerTable("projectedTable", projTable);
@@ -186,7 +186,7 @@ tableEnv.registerTable("projectedTable", projTable);
 val tableEnv = TableEnvironment.getTableEnvironment(env)
 
 // Table is the result of a simple projection query 
-val projTable: Table = tableEnv.scan("X").select(...)
+val projTable: Table = tableEnv.scan("X").project(...)
 
 // register the Table projTable as table "projectedX"
 tableEnv.registerTable("projectedTable", projTable)
@@ -365,9 +365,9 @@ val tableEnv = TableEnvironment.getTableEnvironment(env)
 // register Orders table
 
 // scan registered Orders table
-val orders = tableEnv.scan("Orders")
+Table orders = tableEnv.scan("Orders")
 // compute revenue for all customers from France
-val revenue = orders
+Table revenue = orders
   .filter('cCountry === "FRANCE")
   .groupBy('cID, 'cName)
   .select('cID, 'cName, 'revenue.sum AS 'revSum)
@@ -419,7 +419,7 @@ val tableEnv = TableEnvironment.getTableEnvironment(env)
 // register Orders table
 
 // compute revenue for all customers from France
-val revenue = tableEnv.sqlQuery("""
+Table revenue = tableEnv.sqlQuery("""
   |SELECT cID, cName, SUM(revenue) AS revSum
   |FROM Orders
   |WHERE cCountry = 'FRANCE'

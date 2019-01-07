@@ -171,9 +171,11 @@ public class TypeSerializerSerializationUtil {
 	 *
 	 * @throws IOException
 	 */
-	public static List<Tuple2<TypeSerializer<?>, TypeSerializerConfigSnapshot>> readSerializersAndConfigsWithResilience(
+	public static List<Tuple2<TypeSerializer<?>, TypeSerializerConfigSnapshot>>  readSerializersAndConfigsWithResilience(
 			DataInputView in,
 			ClassLoader userCodeClassLoader) throws IOException {
+
+		//userCodeClassLoader.
 
 		int numSerializersAndConfigSnapshots = in.readInt();
 

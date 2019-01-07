@@ -561,7 +561,7 @@ object AggregateUtil {
       aggFieldIndexes,
       aggMapping,
       partialResults = true,
-      groupings.indices.toArray,
+      groupings,
       Some(aggregates.indices.map(_ + groupings.length).toArray),
       outputType.getFieldCount,
       needRetract,

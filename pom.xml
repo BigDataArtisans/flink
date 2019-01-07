@@ -28,7 +28,7 @@ under the License.
 
 	<groupId>org.apache.flink</groupId>
 	<artifactId>flink-parent</artifactId>
-	<version>1.4-SNAPSHOT</version>
+	<version>1.4.2</version>
 
 	<name>flink</name>
 	<packaging>pom</packaging>
@@ -46,7 +46,7 @@ under the License.
 	<scm>
 		<url>https://github.com/apache/flink</url>
 		<connection>git@github.com:apache/flink.git</connection>
-		<developerConnection>scm:git:https://gitbox.apache.org/repos/asf/flink.git</developerConnection>
+		<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/flink.git</developerConnection>
 	</scm>
 
 	<modules>
@@ -140,7 +140,7 @@ under the License.
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>force-shading</artifactId>
-			<version>1.4-SNAPSHOT</version>
+			<version>1.4.2</version>
 		</dependency>
 
 		<!-- Root dependencies for all projects -->
@@ -973,7 +973,6 @@ under the License.
 						<exclude>**/*.prefs</exclude>
 						<exclude>**/*.log</exclude>
 						<!-- External web libraries. -->
-						<exclude>docs/**/jquery*</exclude>
 						<exclude>docs/**/bootstrap*</exclude>
 						<exclude>docs/Gemfile.lock</exclude>
 						<exclude>docs/ruby2/Gemfile.lock</exclude>
@@ -1092,15 +1091,9 @@ under the License.
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-					<!-- The semantics of this option are reversed, see MCOMPILER-209. -->
-					<useIncrementalCompilation>false</useIncrementalCompilation>
-					<compilerArgs>
-						<!-- The output of Xlint is not shown by default, but we activate it for the QA bot
-						to be able to get more warnings -->
-						<arg>-Xlint:all</arg>
-						<!-- Prevents recompilation due to missing package-info.class, see MCOMPILER-205 -->
-						<arg>-Xpkginfo:always</arg>
-					</compilerArgs>
+					<!-- The output of Xlint is not shown by default, but we activate it for the QA bot
+					to be able to get more warnings -->
+					<compilerArgument>-Xlint:all</compilerArgument>
 				</configuration>
 			</plugin>
 

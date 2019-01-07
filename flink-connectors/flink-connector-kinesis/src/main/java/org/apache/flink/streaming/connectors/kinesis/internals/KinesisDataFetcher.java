@@ -20,7 +20,6 @@ package org.apache.flink.streaming.connectors.kinesis.internals;
 import org.apache.flink.annotation.VisibleForTesting;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.flink.streaming.connectors.kinesis.KinesisShardAssigner;
 import org.apache.flink.streaming.connectors.kinesis.config.ConsumerConfigConstants;
 import org.apache.flink.streaming.connectors.kinesis.model.KinesisStreamShardState;
 import org.apache.flink.streaming.connectors.kinesis.model.SentinelSequenceNumber;
@@ -74,8 +73,6 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class KinesisDataFetcher<T> {
 
-	public static final KinesisShardAssigner DEFAULT_SHARD_ASSIGNER = (shard, subtasks) -> shard.hashCode();
-
 	private static final Logger LOG = LoggerFactory.getLogger(KinesisDataFetcher.class);
 
 	// ------------------------------------------------------------------------
@@ -94,11 +91,6 @@ public class KinesisDataFetcher<T> {
 	 * clone a copy using {@link KinesisDataFetcher#getClonedDeserializationSchema()}.
 	 */
 	private final KinesisDeserializationSchema<T> deserializationSchema;
-
-	/**
-	 * The function that determines which subtask a shard should be assigned to.
-	 */
-	private final KinesisShardAssigner shardAssigner;
 
 	// ------------------------------------------------------------------------
 	//  Subtask-specific settings
@@ -180,15 +172,13 @@ public class KinesisDataFetcher<T> {
 							SourceFunction.SourceContext<T> sourceContext,
 							RuntimeContext runtimeContext,
 							Properties configProps,
-							KinesisDeserializationSchema<T> deserializationSchema,
-							KinesisShardAssigner shardAssigner) {
+							KinesisDeserializationSchema<T> deserializationSchema) {
 		this(streams,
 			sourceContext,
 			sourceContext.getCheckpointLock(),
 			runtimeContext,
 			configProps,
 			deserializationSchema,
-			shardAssigner,
 			new AtomicReference<>(),
 			new ArrayList<>(),
 			createInitialSubscribedStreamsToLastDiscoveredShardsState(streams),
@@ -202,7 +192,6 @@ public class KinesisDataFetcher<T> {
 								RuntimeContext runtimeContext,
 								Properties configProps,
 								KinesisDeserializationSchema<T> deserializationSchema,
-								KinesisShardAssigner shardAssigner,
 								AtomicReference<Throwable> error,
 								List<KinesisStreamShardState> subscribedShardsState,
 								HashMap<String, String> subscribedStreamsToLastDiscoveredShardIds,
@@ -215,7 +204,6 @@ public class KinesisDataFetcher<T> {
 		this.totalNumberOfConsumerSubtasks = runtimeContext.getNumberOfParallelSubtasks();
 		this.indexOfThisConsumerSubtask = runtimeContext.getIndexOfThisSubtask();
 		this.deserializationSchema = checkNotNull(deserializationSchema);
-		this.shardAssigner = checkNotNull(shardAssigner);
 		this.kinesis = checkNotNull(kinesis);
 
 		this.error = checkNotNull(error);
@@ -448,8 +436,7 @@ public class KinesisDataFetcher<T> {
 			for (String stream : streamsWithNewShards) {
 				List<StreamShardHandle> newShardsOfStream = shardListResult.getRetrievedShardListOfStream(stream);
 				for (StreamShardHandle newShard : newShardsOfStream) {
-					int hashCode = shardAssigner.assign(newShard, totalNumberOfConsumerSubtasks);
-					if (isThisSubtaskShouldSubscribeTo(hashCode, totalNumberOfConsumerSubtasks, indexOfThisConsumerSubtask)) {
+					if (isThisSubtaskShouldSubscribeTo(newShard, totalNumberOfConsumerSubtasks, indexOfThisConsumerSubtask)) {
 						newShardsToSubscribe.add(newShard);
 					}
 				}
@@ -496,7 +483,7 @@ public class KinesisDataFetcher<T> {
 	 *                        when the shard state was registered.
 	 * @param lastSequenceNumber the last sequence number value to update
 	 */
-	protected void emitRecordAndUpdateState(T record, long recordTimestamp, int shardStateIndex, SequenceNumber lastSequenceNumber) {
+	protected final void emitRecordAndUpdateState(T record, long recordTimestamp, int shardStateIndex, SequenceNumber lastSequenceNumber) {
 		synchronized (checkpointLock) {
 			sourceContext.collectWithTimestamp(record, recordTimestamp);
 			updateState(shardStateIndex, lastSequenceNumber);
@@ -564,14 +551,14 @@ public class KinesisDataFetcher<T> {
 	/**
 	 * Utility function to determine whether a shard should be subscribed by this consumer subtask.
 	 *
-	 * @param shardHash hash code for the shard
+	 * @param shard the shard to determine
 	 * @param totalNumberOfConsumerSubtasks total number of consumer subtasks
 	 * @param indexOfThisConsumerSubtask index of this consumer subtask
 	 */
-	public static boolean isThisSubtaskShouldSubscribeTo(int shardHash,
+	public static boolean isThisSubtaskShouldSubscribeTo(StreamShardHandle shard,
 														int totalNumberOfConsumerSubtasks,
 														int indexOfThisConsumerSubtask) {
-		return (Math.abs(shardHash % totalNumberOfConsumerSubtasks)) == indexOfThisConsumerSubtask;
+		return (Math.abs(shard.hashCode() % totalNumberOfConsumerSubtasks)) == indexOfThisConsumerSubtask;
 	}
 
 	@VisibleForTesting

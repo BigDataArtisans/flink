@@ -33,10 +33,6 @@ public class Message implements Serializable {
 	@Column(name = "body")
 	private String message;
 
-	public Message() {
-		this(null);
-	}
-
 	public Message(String word) {
 		this.message = word;
 	}

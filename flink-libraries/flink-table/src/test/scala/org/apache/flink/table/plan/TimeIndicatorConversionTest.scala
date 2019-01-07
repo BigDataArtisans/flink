@@ -221,7 +221,6 @@ class TimeIndicatorConversionTest extends TableTestBase {
         streamTableNode(0),
         term("select", "rowtime")
       ),
-      term("all", "true"),
       term("union all", "rowtime")
     )
 

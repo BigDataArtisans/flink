@@ -449,7 +449,7 @@ public class CliFrontend {
 			jobDetails.forEach(details -> {
 				if (details.getJobState() == JobStatus.CREATED) {
 					scheduledJobs.add(details);
-				} else if (!details.getJobState().isGloballyTerminalState()) {
+				} else {
 					runningJobs.add(details);
 				}
 			});

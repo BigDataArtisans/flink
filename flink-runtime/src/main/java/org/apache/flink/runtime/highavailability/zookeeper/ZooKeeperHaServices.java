@@ -163,7 +163,7 @@ public class ZooKeeperHaServices implements HighAvailabilityServices {
 
 	@Override
 	public SubmittedJobGraphStore getSubmittedJobGraphStore() throws Exception {
-		return ZooKeeperUtils.createSubmittedJobGraphs(client, configuration);
+		return ZooKeeperUtils.createSubmittedJobGraphs(client, configuration, executor);
 	}
 
 	@Override

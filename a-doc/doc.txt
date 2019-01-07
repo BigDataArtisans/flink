@@ -1,0 +1,64 @@
+
+
+
+
+
+AbstractRichFunction
+
+    Map<String, String> allVariables = runtimeContext.getMetricGroup().getAllVariables();
+    String host = allVariables.get("<host>");
+    String jobId = allVariables.get("<job_id>");
+    String tmId = allVariables.get("<tm_id>");
+    MDC.put("host", host);
+    MDC.put("jobId", jobId);
+    MDC.put("tmId", tmId);
+    MDC.put("type", "FLINK");
+
+
+
+
+mvn clean package -Dhadoop.version=2.4.1 -Dfast -Dmaven.javadoc.skip=true -Dcheckstyle.skip=true -Drat.skip=true -DskipTests
+
+mvn -am -pl flink-dist clean package -Dhadoop.version=2.4.1 -Dfast -Dmaven.javadoc.skip=true -Dcheckstyle.skip=true -Drat.skip=true -DskipTests
+
+mvn -am -pl flink-dist clean package -Dfast -Dmaven.javadoc.skip=true -Dcheckstyle.skip=true -Drat.skip=true -DskipTests
+
+flink-avro
+src/test/assembly/test-assembly.xml --> /work/projetcs/lamber-ken/flink-parent/flink-formats/flink-avro/src/test/assembly/test-assembly.xml
+
+flink-clients
+src/test/assembly/test-assembly.xml --> /work/projetcs/lamber-ken/flink-parent/flink-clients/src/test/assembly/test-assembly.xml
+
+${basedir}
+${project.basedir}
+${project.baseUri}
+${project.build.directory}
+${project.build.sourceEncoding}
+
+<descriptor>${basedir}/src/test/assembly/test-assembly.xml</descriptor>
+
+
+
+git remote remove gitee-upstream
+git remote add gitee-upstream git@gitee.com:lamber-ken/flink.git
+
+git add -A
+git commit -am "update"
+git push gitee-upstream tc-release-1.4.2:tc-release-1.4.2
+
+
+
+
+git checkout master
+git fetch upstream
+git merge upstream/master
+
+CurrentJobsOverviewHandler
+// private static final String RUNNING_JOBS_REST_PATH = "/jobs/overview";
+
+
+
+
+
+
+

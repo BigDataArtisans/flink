@@ -179,7 +179,7 @@ class NettyClient {
 				// SSL handler should be added first in the pipeline
 				if (clientSSLContext != null) {
 					SSLEngine sslEngine = clientSSLContext.createSSLEngine(
-						serverSocketAddress.getAddress().getCanonicalHostName(),
+						serverSocketAddress.getAddress().getHostAddress(),
 						serverSocketAddress.getPort());
 					sslEngine.setUseClientMode(true);
 

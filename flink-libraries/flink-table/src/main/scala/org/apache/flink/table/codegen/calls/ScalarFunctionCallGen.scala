@@ -107,7 +107,7 @@ class ScalarFunctionCallGen(
 
     // convert result of function to internal representation (input unboxing)
     val resultUnboxing = if (resultClass.isPrimitive) {
-      codeGenerator.generateTerm(returnType, resultTerm)
+      codeGenerator.generateNonNullLiteral(returnType, resultTerm)
     } else {
       codeGenerator.generateInputFieldUnboxing(returnType, resultTerm)
     }

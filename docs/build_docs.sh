@@ -27,18 +27,16 @@ DIR="`pwd`"
 
 # We need at least bundler to proceed
 if [ "`command -v bundle`" == "" ]; then
-	RUBYGEM_BINDIR=""
+	echo "WARN: Could not find bundle."
+    echo "Attempting to install locally. If this doesn't work, please install with 'gem install bundler'."
 
-	# Adjust the PATH to discover locally installed ruby gem binaries
-	export PATH="$(${RUBY} -e 'puts Gem.user_dir')/bin:$PATH"
+    # Adjust the PATH to discover the locally installed Ruby gem
+    if which ${RUBY} >/dev/null && which gem >/dev/null; then
+        export PATH="$(${RUBY} -rubygems -e 'puts Gem.user_dir')/bin:$PATH"
+    fi
 
-	if [ "`command -v bundle`" == "" ]; then
-		echo "WARN: Could not find bundle."
-		echo "Attempting to install locally. If this doesn't work, please install with 'gem install bundler'."
-
-		# install bundler locally
-		${GEM} install --user-install --no-format-executable bundler
-	fi
+    # install bundler locally
+    ${GEM} install --user-install bundler
 fi
 
 # Install Ruby dependencies locally
@@ -59,6 +57,7 @@ while getopts "pi" opt; do
 		;;
 		i)
 		[[ `${RUBY} -v` =~ 'ruby 1' ]] && echo "Error: building the docs with the incremental option requires at least ruby 2.0" && exit 1
+		bundle install --path .rubydeps
 		JEKYLL_CMD="liveserve --baseurl= --watch --incremental"
 		;;
 	esac

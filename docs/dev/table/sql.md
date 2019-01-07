@@ -22,9 +22,9 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-SQL queries are specified with the `sqlQuery()` method of the `TableEnvironment`. The method returns the result of the SQL query as a `Table`. A `Table` can be used in [subsequent SQL and Table API queries](common.html#mixing-table-api-and-sql), be [converted into a DataSet or DataStream](common.html#integration-with-datastream-and-dataset-api), or [written to a TableSink](common.html#emit-a-table)). SQL and Table API queries can seamlessly mixed and are holistically optimized and translated into a single program.
+SQL queries are specified with the `sql()` method of the `TableEnvironment`. The method returns the result of the SQL query as a `Table`. A `Table` can be used in [subsequent SQL and Table API queries](common.html#mixing-table-api-and-sql), be [converted into a DataSet or DataStream](common.html#integration-with-datastream-and-dataset-api), or [written to a TableSink](common.html#emit-a-table)). SQL and Table API queries can seamlessly mixed and are holistically optimized and translated into a single program.
 
-In order to access a table in a SQL query, it must be [registered in the TableEnvironment](common.html#register-tables-in-the-catalog). A table can be registered from a [TableSource](common.html#register-a-tablesource), [Table](common.html#register-a-table), [DataStream, or DataSet](common.html#register-a-datastream-or-dataset-as-table). Alternatively, users can also [register external catalogs in a TableEnvironment](common.html#register-an-external-catalog) to specify the location of the data sources.
+In order to access a table in a SQL query, it must be [registered in the TableEnvironment](common.html#register-a-table-in-the-catalog). A table can be registered from a [TableSource](common.html#register-a-tablesource), [Table](common.html#register-a-table), [DataStream, or DataSet](common.html#register-a-datastream-or-dataset-as-table). Alternatively, users can also [register external catalogs in a TableEnvironment](common.html#register-an-external-catalog) to specify the location of the data sources.
 
 For convenience `Table.toString()` automatically registers the table under a unique name in its `TableEnvironment` and returns the name. Hence, `Table` objects can be directly inlined into SQL queries (by string concatenation) as shown in the examples below.
 
@@ -115,10 +115,6 @@ The following BNF-grammar describes the superset of supported SQL features in ba
 
 ```
 
-insert:
-  INSERT INTO tableReference
-  query
-  
 query:
   values
   | {
@@ -143,8 +139,7 @@ select:
   [ WHERE booleanExpression ]
   [ GROUP BY { groupItem [, groupItem ]* } ]
   [ HAVING booleanExpression ]
-  [ WINDOW windowName AS windowSpec [, windowName AS windowSpec ]* ]
-  
+
 selectWithoutFrom:
   SELECT [ ALL | DISTINCT ]
   { * | projectItem [, projectItem ]* }
@@ -181,20 +176,9 @@ groupItem:
   | ROLLUP '(' expression [, expression ]* ')'
   | GROUPING SETS '(' groupItem [, groupItem ]* ')'
 
-windowRef:
-    windowName
-  | windowSpec
-
-windowSpec:
-    [ windowName ]
-    '('
-    [ ORDER BY orderItem [, orderItem ]* ]
-    [ PARTITION BY expression [, expression ]* ]
-    [
-        RANGE numericOrIntervalExpression {PRECEDING}
-      | ROWS numericExpression {PRECEDING}
-    ]
-    ')'
+insert:
+  INSERT INTO tableReference
+  query
 
 ```
 
@@ -318,13 +302,6 @@ SELECT COUNT(amount) OVER (
   ORDER BY proctime
   ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
 FROM Orders
-
-SELECT COUNT(amount) OVER w, SUM(amount) OVER w
-FROM Orders 
-WINDOW w AS (
-  PARTITION BY user
-  ORDER BY proctime
-  ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)  
 {% endhighlight %}
       </td>
     </tr>
@@ -2190,8 +2167,8 @@ VAR_SAMP(value)
     <tr>
       <td>
           {% highlight text %}
-COLLECT(value)
-{% endhighlight %}
+          COLLECT(value)
+          {% endhighlight %}
       </td>
       <td>
           <p>Returns a multiset of the <i>value</i>s. null input <i>value</i> will be ignored. Return an empty multiset if only null values are added. </p>
@@ -2438,6 +2415,9 @@ A, ABS, ABSOLUTE, ACTION, ADA, ADD, ADMIN, AFTER, ALL, ALLOCATE, ALLOW, ALTER, A
   </tr>
   <tr><td>{% highlight text %}%v{% endhighlight %}</td>
   <td>Week (<code>01</code> .. <code>53</code>), where Monday is the first day of the week; used with <code>%x</code></td>
+  </tr>
+  <tr><td>{% highlight text %}%W{% endhighlight %}</td>
+  <td>Weekday name (<code>Sunday</code> .. <code>Saturday</code>)</td>
   </tr>
   <tr><td>{% highlight text %}%W{% endhighlight %}</td>
   <td>Weekday name (<code>Sunday</code> .. <code>Saturday</code>)</td>

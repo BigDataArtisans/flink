@@ -20,7 +20,6 @@ package org.apache.flink.api.java.io;
 
 import org.apache.flink.annotation.Public;
 import org.apache.flink.annotation.PublicEvolving;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.Utils;
 import org.apache.flink.api.java.operators.DataSource;
@@ -317,18 +316,14 @@ public class CsvReader {
 		Preconditions.checkNotNull(pojoType, "The POJO type class must not be null.");
 		Preconditions.checkNotNull(pojoFields, "POJO fields must be specified (not null) if output type is a POJO.");
 
-		final TypeInformation<T> ti = TypeExtractor.createTypeInfo(pojoType);
-		if (!(ti instanceof PojoTypeInfo)) {
-			throw new IllegalArgumentException(
-				"The specified class is not a POJO. The type class must meet the POJO requirements. Found: " + ti);
-		}
-		final PojoTypeInfo<T> pti = (PojoTypeInfo<T>) ti;
+		@SuppressWarnings("unchecked")
+		PojoTypeInfo<T> typeInfo = (PojoTypeInfo<T>) TypeExtractor.createTypeInfo(pojoType);
 
-		CsvInputFormat<T> inputFormat = new PojoCsvInputFormat<T>(path, this.lineDelimiter, this.fieldDelimiter, pti, pojoFields, this.includedMask);
+		CsvInputFormat<T> inputFormat = new PojoCsvInputFormat<T>(path, this.lineDelimiter, this.fieldDelimiter, typeInfo, pojoFields, this.includedMask);
 
 		configureInputFormat(inputFormat);
 
-		return new DataSource<T>(executionContext, inputFormat, pti, Utils.getCallLocationName());
+		return new DataSource<T>(executionContext, inputFormat, typeInfo, Utils.getCallLocationName());
 	}
 
 	/**

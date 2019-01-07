@@ -23,7 +23,7 @@ under the License.
 	<parent>
 		<groupId>org.apache.flink</groupId>
 		<artifactId>flink-libraries</artifactId>
-		<version>1.4-SNAPSHOT</version>
+		<version>1.4.2</version>
 		<relativePath>..</relativePath>
 	</parent>
 
@@ -51,11 +51,6 @@ under the License.
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
 		</dependency>
 
 		<dependency>
@@ -208,7 +203,7 @@ under the License.
 						<id>scala-compile-first</id>
 						<phase>process-resources</phase>
 						<goals>
-							<goal>add-source</goal>
+							<!--<goal>add-source</goal>-->
 							<goal>compile</goal>
 						</goals>
 					</execution>
@@ -268,10 +263,8 @@ under the License.
 
 									<!-- flink-table dependencies -->
 									<include>commons-configuration:*</include>
-									<include>org.slf4j:jcl-over-slf4j</include>
 									<include>commons-lang:*</include>
 									<include>commons-codec:*</include>
-									<include>commons-collections:*</include>
 									<include>org.apache.commons:commons-lang3</include>
 									<include>org.codehaus.janino:*</include>
 									<include>org.reflections:*</include>

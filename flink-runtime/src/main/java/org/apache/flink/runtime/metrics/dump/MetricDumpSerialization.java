@@ -220,7 +220,7 @@ public class MetricDumpSerialization {
 		if (value == null) {
 			throw new NullPointerException("Value returned by gauge " + name + " was null.");
 		}
-		String stringValue = value.toString();
+		String stringValue = gauge.getValue().toString();
 		if (stringValue == null) {
 			throw new NullPointerException("toString() of the value returned by gauge " + name + " returned null.");
 		}

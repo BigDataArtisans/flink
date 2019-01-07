@@ -685,19 +685,17 @@ A `ProcessWindowFunction` can be defined and used like this:
 DataStream<Tuple2<String, Long>> input = ...;
 
 input
-  .keyBy(t -> t.f0)
-  .timeWindow(Time.minutes(5))
-  .process(new MyProcessWindowFunction());
+    .keyBy(<key selector>)
+    .window(<window assigner>)
+    .process(new MyProcessWindowFunction());
 
 /* ... */
 
-public class MyProcessWindowFunction 
-    extends ProcessWindowFunction<Tuple2<String, Long>, String, String, TimeWindow> {
+public class MyProcessWindowFunction implements ProcessWindowFunction<Tuple<String, Long>, String, String, TimeWindow> {
 
-  @Override
-  public void process(String key, Context context, Iterable<Tuple2<String, Long>> input, Collector<String> out) {
+  void process(String key, Context context, Iterable<Tuple<String, Long>> input, Collector<String> out) {
     long count = 0;
-    for (Tuple2<String, Long> in: input) {
+    for (Tuple<String, Long> in: input) {
       count++;
     }
     out.collect("Window: " + context.window() + "count: " + count);
@@ -712,9 +710,9 @@ public class MyProcessWindowFunction
 val input: DataStream[(String, Long)] = ...
 
 input
-  .keyBy(_._1)
-  .timeWindow(Time.minutes(5))
-  .process(new MyProcessWindowFunction())
+    .keyBy(<key selector>)
+    .window(<window assigner>)
+    .process(new MyProcessWindowFunction())
 
 /* ... */
 

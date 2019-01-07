@@ -145,11 +145,11 @@ class AsyncDatabaseRequest extends AsyncFunction[String, (String, String)] {
     override def asyncInvoke(str: String, resultFuture: ResultFuture[(String, String)]): Unit = {
 
         // issue the asynchronous request, receive a future for the result
-        val resultFutureRequested: Future[String] = client.query(str)
+        val resultFuture: Future[String] = client.query(str)
 
         // set the callback to be executed once the request by the client is complete
         // the callback simply forwards the result to the result future
-        resultFutureRequested.onSuccess {
+        resultFuture.onSuccess {
             case result: String => resultFuture.complete(Iterable((str, result)))
         }
     }

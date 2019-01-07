@@ -111,7 +111,8 @@ public class JarListHandler extends AbstractJsonRequestHandler {
 						gen.writeArrayFieldStart("entry");
 
 						String[] classes = new String[0];
-						try (JarFile jar = new JarFile(f)) {
+						try {
+							JarFile jar = new JarFile(f);
 							Manifest manifest = jar.getManifest();
 							String assemblerClass = null;
 

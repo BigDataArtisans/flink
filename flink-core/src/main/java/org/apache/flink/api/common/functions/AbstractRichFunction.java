@@ -19,9 +19,11 @@ c * Licensed to the Apache Software Foundation (ASF) under one
 package org.apache.flink.api.common.functions;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.apache.flink.annotation.Public;
 import org.apache.flink.configuration.Configuration;
+import org.slf4j.MDC;
 
 /**
  * An abstract stub implementation for rich user-defined functions.
@@ -43,6 +45,17 @@ public abstract class AbstractRichFunction implements RichFunction, Serializable
 	@Override
 	public void setRuntimeContext(RuntimeContext t) {
 		this.runtimeContext = t;
+
+		Map<String, String> allVariables = runtimeContext.getMetricGroup().getAllVariables();
+		String host = allVariables.get("<host>");
+		String jobId = allVariables.get("<job_id>");
+		String tmId = allVariables.get("<tm_id>");
+		MDC.put("host", host);
+		MDC.put("jobId", jobId);
+		MDC.put("tmId", tmId);
+		MDC.put("type", "FLINK");
+
+
 	}
 
 	@Override

@@ -135,12 +135,6 @@ public class TestProcessingTimeService extends ProcessingTimeService {
 	}
 
 	@Override
-	public boolean shutdownServiceUninterruptible(long timeoutMs) {
-		shutdownService();
-		return true;
-	}
-
-	@Override
 	public boolean shutdownAndAwaitPending(long time, TimeUnit timeUnit) throws InterruptedException {
 		shutdownService();
 		return true;
