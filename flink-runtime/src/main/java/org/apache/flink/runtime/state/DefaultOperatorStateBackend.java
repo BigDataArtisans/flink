@@ -628,3 +628,4 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
 				"registered with [" + expectedMode + "].");
 	}
 }
+
