@@ -268,6 +268,39 @@ public class OperatorStateBackendTest {
 		// System.out.println(operatorStateBackend.getUnionListState());
 	}
 
+	@Test
+	public void testWrite() throws Exception {
+
+		ExecutionConfig execConfig = new ExecutionConfig();
+		DefaultOperatorStateBackend operatorStateBackend =
+			new DefaultOperatorStateBackend(Thread.currentThread().getContextClassLoader(), execConfig, false);
+
+		ListState<Tuple2<KafkaTopicPartition, Long>> offsetStates = operatorStateBackend
+			.getUnionListState(new ListStateDescriptor<>("topic-partition-offset-states", TypeInformation.of(new TypeHint<Tuple2<KafkaTopicPartition, Long>>() {
+			})));
+
+		operatorStateBackend.getSerializableListState(DefaultOperatorStateBackend.DEFAULT_OPERATOR_STATE_NAME);
+
+
+		offsetStates.add(Tuple2.of(new KafkaTopicPartition("test-topic-11", 1), 100L));
+		offsetStates.add(Tuple2.of(new KafkaTopicPartition("test-topic-22", 1), 100L));
+
+
+		StateBackend stateBackend = new FsStateBackend("file:///work/projetcs/lamber-ken/flink-parent/flink-runtime/src/test/data");
+
+		JobID jobID = JobID.fromByteArray("868f83f590f64242".getBytes());
+		CheckpointStreamFactory streamFactory = stateBackend.createStreamFactory(jobID, "testOperator2");
+
+		operatorStateBackend.snapshot(1111L, System.currentTimeMillis(), streamFactory, CheckpointOptions.forCheckpoint());
+		// operatorStateBackend.snapshot(1111L, System.currentTimeMillis(), streamFactory, CheckpointOptions.forCheckpoint());
+
+
+		System.out.println(operatorStateBackend.getRegisteredStateNames());
+
+	}
+
+
+
 	/**
 	 * Int serializer which verifies that the given classloader is set for the copy operation
 	 */
