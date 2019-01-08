@@ -57,16 +57,19 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testFailOnNoBroker() throws Exception {
+		Thread.sleep(5 * 1000);
 		runFailOnNoBrokerTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testConcurrentProducerConsumerTopology() throws Exception {
+		Thread.sleep(5 * 1000);
 		runSimpleConcurrentProducerConsumerTopology();
 	}
 
 	@Test(timeout = 60000)
 	public void testKeyValueSupport() throws Exception {
+		Thread.sleep(5 * 1000);
 		runKeyValueTest();
 	}
 
@@ -74,16 +77,19 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testCancelingEmptyTopic() throws Exception {
+		Thread.sleep(5 * 1000);
 		runCancelingOnEmptyInputTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testCancelingFullTopic() throws Exception {
+		Thread.sleep(5 * 1000);
 		runCancelingOnFullInputTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testFailOnDeploy() throws Exception {
+		Thread.sleep(5 * 1000);
 		runFailOnDeployTest();
 	}
 
@@ -91,16 +97,19 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testOneToOneSources() throws Exception {
+		Thread.sleep(5 * 1000);
 		runOneToOneExactlyOnceTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testOneSourceMultiplePartitions() throws Exception {
+		Thread.sleep(5 * 1000);
 		runOneSourceMultiplePartitionsExactlyOnceTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testMultipleSourcesOnePartition() throws Exception {
+		Thread.sleep(5 * 1000);
 		runMultipleSourcesOnePartitionExactlyOnceTest();
 	}
 
@@ -108,6 +117,7 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testBrokerFailure() throws Exception {
+		Thread.sleep(5 * 1000);
 		runBrokerFailureTest();
 	}
 
@@ -115,21 +125,25 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testBigRecordJob() throws Exception {
+		Thread.sleep(5 * 1000);
 		runBigRecordTestTopology();
 	}
 
 	@Test(timeout = 60000)
 	public void testMultipleTopics() throws Exception {
+		Thread.sleep(5 * 1000);
 		runProduceConsumeMultipleTopics();
 	}
 
 	@Test(timeout = 60000)
 	public void testAllDeletes() throws Exception {
+		Thread.sleep(5 * 1000);
 		runAllDeletesTest();
 	}
 
 	@Test(timeout = 60000)
 	public void testMetricsAndEndOfStream() throws Exception {
+		Thread.sleep(5 * 1000);
 		runEndOfStreamTest();
 	}
 
@@ -137,21 +151,25 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testStartFromEarliestOffsets() throws Exception {
+		Thread.sleep(5 * 1000);
 		runStartFromEarliestOffsets();
 	}
 
 	@Test(timeout = 60000)
 	public void testStartFromLatestOffsets() throws Exception {
+		Thread.sleep(5 * 1000);
 		runStartFromLatestOffsets();
 	}
 
 	@Test(timeout = 60000)
 	public void testStartFromGroupOffsets() throws Exception {
+		Thread.sleep(5 * 1000);
 		runStartFromGroupOffsets();
 	}
 
 	@Test(timeout = 60000)
 	public void testStartFromSpecificOffsets() throws Exception {
+		Thread.sleep(5 * 1000);
 		runStartFromSpecificOffsets();
 	}
 
@@ -159,11 +177,13 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 
 	@Test(timeout = 60000)
 	public void testCommitOffsetsToKafka() throws Exception {
+		Thread.sleep(5 * 1000);
 		runCommitOffsetsToKafka();
 	}
 
 	@Test(timeout = 60000)
 	public void testAutoOffsetRetrievalAndCommitToKafka() throws Exception {
+		Thread.sleep(5 * 1000);
 		runAutoOffsetRetrievalAndCommitToKafka();
 	}
 
@@ -172,6 +192,7 @@ public class Kafka010ITCase extends KafkaConsumerTestBase {
 	 */
 	@Test(timeout = 60000)
 	public void testTimestamps() throws Exception {
+		Thread.sleep(5 * 1000);
 
 		final String topic = "tstopic";
 		createTestTopic(topic, 3, 1);
