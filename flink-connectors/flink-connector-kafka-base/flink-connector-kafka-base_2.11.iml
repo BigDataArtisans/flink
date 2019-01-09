@@ -11,7 +11,30 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="flink-metrics-jmx" scope="TEST" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.flink:flink-shaded-jackson:2.7.9-2.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.flink:flink-shaded-guava:18.0-2.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.sling:org.apache.sling.commons.json:2.0.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.calcite:calcite-core:1.14.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.calcite.avatica:avatica-core:1.10.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.calcite:calcite-linq4j:1.14.0" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.11" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.javassist:javassist:3.18.2-GA" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.flink:flink-shaded-netty:4.0.27.Final-2.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.flink:flink-shaded-asm:5.0.4-2.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.clapper:grizzled-slf4j_2.11:1.0.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twitter:chill_2.11:0.7.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.twitter:chill-java:0.7.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-all:1.10.19" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-module-junit4:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-module-junit4-common:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-core:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-reflect:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-api-mockito:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-core:1.10.19" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-api-mockito-common:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.powermock:powermock-api-support:1.6.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.slf4j:slf4j-log4j12:1.7.7" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.flink:flink-shaded-jackson:2.7.9-2.0" level="project" />
     <orderEntry type="module" module-name="flink-streaming-java_2.11" scope="PROVIDED" />
     <orderEntry type="module" module-name="flink-core" scope="PROVIDED" />
