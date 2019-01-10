@@ -17,6 +17,8 @@ flink-1.4.2
 相关ISSUE
 https://issues.apache.org/jira/browse/FLINK-9290
 
+LINUX
+find . -type f -size -5515c
 
 
 sublime 9eef5566-a1f6-460b-8d54-5b912db770f2
