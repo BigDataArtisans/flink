@@ -20,6 +20,8 @@ package org.apache.flink.table.dataformat;
 
 import org.apache.flink.core.memory.MemorySegment;
 import org.apache.flink.core.memory.MemorySegmentFactory;
+import org.apache.flink.table.type.InternalType;
+import org.apache.flink.table.type.InternalTypes;
 import org.apache.flink.table.util.SegmentsUtil;
 
 import static org.apache.flink.core.memory.MemoryUtils.UNSAFE;
@@ -40,6 +42,7 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 	private static final int BYTE_ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
 	private static final int BOOLEAN_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(boolean[].class);
 	private static final int SHORT_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(short[].class);
+	private static final int CHAR_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(char[].class);
 	private static final int INT_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(int[].class);
 	private static final int LONG_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(long[].class);
 	private static final int FLOAT_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(float[].class);
@@ -47,6 +50,34 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 
 	public static int calculateHeaderInBytes(int numFields) {
 		return 4 + ((numFields + 31) / 32) * 4;
+	}
+
+	/**
+	 * It store real value when type is primitive.
+	 * It store the length and offset of variable-length part when type is string, map, etc.
+	 */
+	public static int calculateFixLengthPartSize(InternalType type) {
+		if (type.equals(InternalTypes.BOOLEAN)) {
+			return 1;
+		} else if (type.equals(InternalTypes.BYTE)) {
+			return 1;
+		} else if (type.equals(InternalTypes.SHORT)) {
+			return 2;
+		} else if (type.equals(InternalTypes.INT)) {
+			return 4;
+		} else if (type.equals(InternalTypes.FLOAT)) {
+			return 4;
+		} else if (type.equals(InternalTypes.CHAR)) {
+			return 2;
+		} else if (type.equals(InternalTypes.DATE)) {
+			return 4;
+		} else if (type.equals(InternalTypes.TIME)) {
+			return 4;
+		} else {
+			// long, double is 8 bytes.
+			// It store the length and offset of variable-length part when type is string, map, etc.
+			return 8;
+		}
 	}
 
 	// The number of elements in this array
@@ -70,10 +101,7 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 		return numElements;
 	}
 
-	public void pointTo(MemorySegment segment, int offset, int sizeInBytes) {
-		pointTo(new MemorySegment[]{segment}, offset, sizeInBytes);
-	}
-
+	@Override
 	public void pointTo(MemorySegment[] segments, int offset, int sizeInBytes) {
 		// Read the number of elements from the first 4 bytes.
 		final int numElements = SegmentsUtil.getInt(segments, offset);
@@ -151,6 +179,28 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 	}
 
 	@Override
+	public Decimal getDecimal(int pos, int precision, int scale) {
+		assertIndexIsValid(pos);
+		if (Decimal.isCompact(precision)) {
+			return Decimal.fromUnscaledLong(precision, scale,
+					SegmentsUtil.getLong(segments, getElementOffset(pos, 8)));
+		}
+
+		int fieldOffset = getElementOffset(pos, 8);
+		final long offsetAndSize = SegmentsUtil.getLong(segments, fieldOffset);
+		return Decimal.readDecimalFieldFromSegments(segments, offset, offsetAndSize, precision, scale);
+	}
+
+	@Override
+	public <T> BinaryGeneric<T> getGeneric(int pos) {
+		assertIndexIsValid(pos);
+		int fieldOffset = getElementOffset(pos, 8);
+		final long offsetAndSize = SegmentsUtil.getLong(segments, fieldOffset);
+		return BinaryGeneric.readBinaryGenericFieldFromSegments(
+				segments, offset, offsetAndSize);
+	}
+
+	@Override
 	public BinaryArray getArray(int pos) {
 		assertIndexIsValid(pos);
 		return BinaryArray.readBinaryArrayFieldFromSegments(segments, offset, getLong(pos));
@@ -160,6 +210,15 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 	public BinaryMap getMap(int pos) {
 		assertIndexIsValid(pos);
 		return BinaryMap.readBinaryMapFieldFromSegments(segments, offset, getLong(pos));
+	}
+
+	@Override
+	public BaseRow getRow(int pos, int numFields) {
+		assertIndexIsValid(pos);
+		int fieldOffset = getElementOffset(pos, 8);
+		final long offsetAndSize = SegmentsUtil.getLong(segments, fieldOffset);
+		return NestedRow.readNestedRowFieldFromSegments(
+				segments, numFields, offset, offsetAndSize);
 	}
 
 	@Override
@@ -270,6 +329,37 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 		SegmentsUtil.setChar(segments, getElementOffset(pos, 2), value);
 	}
 
+	@Override
+	public void setDecimal(int pos, Decimal value, int precision) {
+		assertIndexIsValid(pos);
+
+		if (Decimal.isCompact(precision)) {
+			// compact format
+			setLong(pos, value.toUnscaledLong());
+		} else {
+			int fieldOffset = getElementOffset(pos, 8);
+			int cursor = (int) (SegmentsUtil.getLong(segments, fieldOffset) >>> 32);
+			assert cursor > 0 : "invalid cursor " + cursor;
+			// zero-out the bytes
+			SegmentsUtil.setLong(segments, offset + cursor, 0L);
+			SegmentsUtil.setLong(segments, offset + cursor + 8, 0L);
+
+			if (value == null) {
+				setNullAt(pos);
+				// keep the offset for future update
+				SegmentsUtil.setLong(segments, fieldOffset, ((long) cursor) << 32);
+			} else {
+
+				byte[] bytes = value.toUnscaledBytes();
+				assert (bytes.length <= 16);
+
+				// Write the bytes to the variable length portion.
+				SegmentsUtil.copyFromBytes(segments, offset + cursor, bytes, 0, bytes.length);
+				setLong(pos, ((long) cursor << 32) | ((long) bytes.length));
+			}
+		}
+	}
+
 	public void setNullChar(int pos) {
 		assertIndexIsValid(pos);
 		SegmentsUtil.bitSet(segments, offset + 4, pos);
@@ -315,6 +405,14 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 		return values;
 	}
 
+	public char[] toCharArray() {
+		checkNoNull();
+		char[] values = new char[numElements];
+		SegmentsUtil.copyToUnsafe(
+				segments, elementOffset, values, CHAR_ARRAY_OFFSET, numElements * 2);
+		return values;
+	}
+
 	public int[] toIntArray() {
 		checkNoNull();
 		int[] values = new int[numElements];
@@ -357,6 +455,11 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 		return reuse;
 	}
 
+	@Override
+	public int hashCode() {
+		return SegmentsUtil.hashByWords(segments, offset, sizeInBytes);
+	}
+
 	private static BinaryArray fromPrimitiveArray(
 			Object arr, int offset, int length, int elementSize) {
 		final long headerInBytes = calculateHeaderInBytes(length);
@@ -391,6 +494,10 @@ public class BinaryArray extends BinaryFormat implements TypeGetterSetters {
 
 	public static BinaryArray fromPrimitiveArray(short[] arr) {
 		return fromPrimitiveArray(arr, SHORT_ARRAY_OFFSET, arr.length, 2);
+	}
+
+	public static BinaryArray fromPrimitiveArray(char[] arr) {
+		return fromPrimitiveArray(arr, CHAR_ARRAY_OFFSET, arr.length, 2);
 	}
 
 	public static BinaryArray fromPrimitiveArray(int[] arr) {
