@@ -650,4 +650,50 @@ public class FutureUtilsTest extends TestLogger {
 		Assert.assertFalse(runWithExecutor.get());
 		Assert.assertTrue(continuationFuture.isDone());
 	}
+
+	@Test
+	public void testAssertNoExceptionWithoutExceptions() {
+		final CompletableFuture<String> future1 = CompletableFuture.completedFuture("foobar");
+		final CompletableFuture<String> future2 = new CompletableFuture<>();
+
+		final TestingUncaughtExceptionHandler uncaughtExceptionHandler = new TestingUncaughtExceptionHandler();
+
+		FutureUtils.assertNoException(future1, uncaughtExceptionHandler);
+		assertThat(uncaughtExceptionHandler.hasBeenCalled(), is(false));
+
+		FutureUtils.assertNoException(future2, uncaughtExceptionHandler);
+		future2.complete("barfoo");
+		assertThat(uncaughtExceptionHandler.hasBeenCalled(), is(false));
+	}
+
+	@Test
+	public void testAssertNoExceptionWithExceptions() {
+		final CompletableFuture<String> future1 = FutureUtils.completedExceptionally(new FlinkException("foobar"));
+		final CompletableFuture<String> future2 = new CompletableFuture<>();
+
+		final TestingUncaughtExceptionHandler uncaughtExceptionHandler1 = new TestingUncaughtExceptionHandler();
+		final TestingUncaughtExceptionHandler uncaughtExceptionHandler2 = new TestingUncaughtExceptionHandler();
+
+		FutureUtils.assertNoException(future1, uncaughtExceptionHandler1);
+		assertThat(uncaughtExceptionHandler1.hasBeenCalled(), is(true));
+
+		FutureUtils.assertNoException(future2, uncaughtExceptionHandler2);
+		assertThat(uncaughtExceptionHandler2.hasBeenCalled(), is(false));
+		future2.completeExceptionally(new FlinkException("barfoo"));
+		assertThat(uncaughtExceptionHandler2.hasBeenCalled(), is(true));
+	}
+
+	private static class TestingUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+		private Throwable exception = null;
+
+		@Override
+		public void uncaughtException(Thread t, Throwable e) {
+			exception = e;
+		}
+
+		private boolean hasBeenCalled() {
+			return exception != null;
+		}
+	}
 }
