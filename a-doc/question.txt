@@ -1,0 +1,8 @@
+
+1, 一个savepoint, 触发了两个
+2019-10-24 10:34:35,562 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->1 [6cef242a39018545007541cdf75bd856, hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+2019-10-24 10:34:35,562 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->4 [6cef242a39018545007541cdf75bd856, hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->5 [6cef242a39018545007541cdf75bd856, hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->6 [6cef242a39018545007541cdf75bd856, hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->1 [hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->4 [hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
