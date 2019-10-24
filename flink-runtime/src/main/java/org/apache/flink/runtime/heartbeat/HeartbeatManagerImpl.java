@@ -21,17 +21,12 @@ package org.apache.flink.runtime.heartbeat;
 import org.apache.flink.runtime.clusterframework.types.ResourceID;
 import org.apache.flink.runtime.concurrent.ScheduledExecutor;
 import org.apache.flink.util.Preconditions;
-
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.concurrent.ThreadSafe;
-
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -47,36 +42,50 @@ import java.util.concurrent.atomic.AtomicReference;
 @ThreadSafe
 public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 
-	/** Heartbeat timeout interval in milli seconds. */
+	/**
+	 * Heartbeat timeout interval in milli seconds.
+	 */
 	private final long heartbeatTimeoutIntervalMs;
 
-	/** Resource ID which is used to mark one own's heartbeat signals. */
+	/**
+	 * Resource ID which is used to mark one own's heartbeat signals.
+	 */
 	private final ResourceID ownResourceID;
 
-	/** Heartbeat listener with which the heartbeat manager has been associated. */
+	/**
+	 * Heartbeat listener with which the heartbeat manager has been associated.
+	 */
 	private final HeartbeatListener<I, O> heartbeatListener;
 
-	/** Executor service used to run heartbeat timeout notifications. */
+	/**
+	 * Executor service used to run heartbeat timeout notifications.
+	 */
 	private final ScheduledExecutor scheduledExecutor;
 
 	protected final Logger log;
 
-	/** Map containing the heartbeat monitors associated with the respective resource ID. */
+	/**
+	 * Map containing the heartbeat monitors associated with the respective resource ID.
+	 */
 	private final ConcurrentHashMap<ResourceID, HeartbeatManagerImpl.HeartbeatMonitor<O>> heartbeatTargets;
 
-	/** Execution context used to run future callbacks. */
+	/**
+	 * Execution context used to run future callbacks.
+	 */
 	private final Executor executor;
 
-	/** Running state of the heartbeat manager. */
+	/**
+	 * Running state of the heartbeat manager.
+	 */
 	protected volatile boolean stopped;
 
 	public HeartbeatManagerImpl(
-			long heartbeatTimeoutIntervalMs,
-			ResourceID ownResourceID,
-			HeartbeatListener<I, O> heartbeatListener,
-			Executor executor,
-			ScheduledExecutor scheduledExecutor,
-			Logger log) {
+		long heartbeatTimeoutIntervalMs,
+		ResourceID ownResourceID,
+		HeartbeatListener<I, O> heartbeatListener,
+		Executor executor,
+		ScheduledExecutor scheduledExecutor,
+		Logger log) {
 		Preconditions.checkArgument(heartbeatTimeoutIntervalMs > 0L, "The heartbeat timeout has to be larger than 0.");
 
 		this.heartbeatTimeoutIntervalMs = heartbeatTimeoutIntervalMs;
@@ -206,14 +215,14 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 
 				if (futurePayload != null) {
 					CompletableFuture<Void> sendHeartbeatFuture = futurePayload.thenAcceptAsync(
-						retrievedPayload ->	heartbeatTarget.receiveHeartbeat(getOwnResourceID(), retrievedPayload),
+						retrievedPayload -> heartbeatTarget.receiveHeartbeat(getOwnResourceID(), retrievedPayload),
 						executor);
 
 					sendHeartbeatFuture.exceptionally((Throwable failure) -> {
-							log.warn("Could not send heartbeat to target with id {}.", requestOrigin, failure);
+						log.warn("Could not send heartbeat to target with id {}.", requestOrigin, failure);
 
-							return null;
-						});
+						return null;
+					});
 				} else {
 					heartbeatTarget.receiveHeartbeat(ownResourceID, null);
 				}
@@ -245,18 +254,28 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 	 */
 	static class HeartbeatMonitor<O> implements Runnable {
 
-		/** Resource ID of the monitored heartbeat target. */
+		private static final Logger LOG = LoggerFactory.getLogger(HeartbeatMonitor.class);
+
+		/**
+		 * Resource ID of the monitored heartbeat target.
+		 */
 		private final ResourceID resourceID;
 
-		/** Associated heartbeat target. */
+		/**
+		 * Associated heartbeat target.
+		 */
 		private final HeartbeatTarget<O> heartbeatTarget;
 
 		private final ScheduledExecutor scheduledExecutor;
 
-		/** Listener which is notified about heartbeat timeouts. */
+		/**
+		 * Listener which is notified about heartbeat timeouts.
+		 */
 		private final HeartbeatListener<?, ?> heartbeatListener;
 
-		/** Maximum heartbeat timeout interval. */
+		/**
+		 * Maximum heartbeat timeout interval.
+		 */
 		private final long heartbeatTimeoutIntervalMs;
 
 		private volatile ScheduledFuture<?> futureTimeout;
@@ -307,6 +326,7 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 				cancelTimeout();
 
 				futureTimeout = scheduledExecutor.schedule(this, heartbeatTimeout, TimeUnit.MILLISECONDS);
+				LOG.info("new futureTimeout:{}", futureTimeout.hashCode());
 
 				// Double check for concurrent accesses (e.g. a firing of the scheduled future)
 				if (state.get() != State.RUNNING) {
@@ -324,6 +344,7 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 
 		private void cancelTimeout() {
 			if (futureTimeout != null) {
+				LOG.info("cancel futureTimeout:{}", futureTimeout.hashCode());
 				futureTimeout.cancel(true);
 			}
 		}
@@ -334,6 +355,8 @@ public class HeartbeatManagerImpl<I, O> implements HeartbeatManager<I, O> {
 
 		@Override
 		public void run() {
+			LOG.info("run futureTimeout:{}", futureTimeout.hashCode());
+
 			// The heartbeat has timed out if we're in state running
 			if (state.compareAndSet(State.RUNNING, State.TIMEOUT)) {
 				heartbeatListener.notifyHeartbeatTimeout(resourceID);

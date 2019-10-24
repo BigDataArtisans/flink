@@ -18,7 +18,7 @@ cd ${FLINK_PROJECT}/flink-dist/target/flink-1.6.7-bin/flink-1.6.7
 bin/flink run -m yarn-cluster -d -yn 1 examples/streaming/SocketWindowWordCount.jar --hostname 10.101.52.39 --port 9999
 
 
-/bin/bash bin/flink savepoint 139b23deebc7d399a6881afec40f469e -yid application_1570170136016_0453
+/bin/bash bin/flink savepoint 5d4fe6b42ac96059b1af455aaa85a695 -yid application_1570170136016_0464
 
 
 

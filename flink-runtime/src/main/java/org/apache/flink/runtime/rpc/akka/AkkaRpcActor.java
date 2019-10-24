@@ -209,13 +209,15 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 		Method rpcMethod = null;
 
 		String methodName = "";
-		Class<?>[] parameterTypes = new Class[0];
+		Object[] margs = new Object[0];
 
 		boolean flag = false;
 
 		try {
 			methodName = rpcInvocation.getMethodName();
-			parameterTypes = rpcInvocation.getParameterTypes();
+			Class<?>[] parameterTypes = rpcInvocation.getParameterTypes();
+			margs = rpcInvocation.getArgs();
+
 
 			rpcMethod = lookupRpcMethod(methodName, parameterTypes);
 
@@ -242,7 +244,7 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 		}
 
 		if (flag){
-			log.info(methodName + " <--->1 " + Arrays.asList(parameterTypes));
+			log.info(methodName + " <--->1 " + Arrays.asList(margs));
 		}
 
 		if (rpcMethod != null) {
@@ -252,23 +254,23 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 
 				if (rpcMethod.getReturnType().equals(Void.TYPE)) {
 					if (flag){
-						log.info(methodName + " <--->2 " + Arrays.asList(parameterTypes));
+						log.info(methodName + " <--->2 " + Arrays.asList(margs));
 					}
 					// No return value to send back
 					rpcMethod.invoke(rpcEndpoint, rpcInvocation.getArgs());
 					if (flag){
-						log.info(methodName + " <--->3 " + Arrays.asList(parameterTypes));
+						log.info(methodName + " <--->3 " + Arrays.asList(margs));
 					}
 
 				} else {
 					final Object result;
 					try {
 						if (flag){
-							log.info(methodName + " <--->4 " + Arrays.asList(parameterTypes));
+							log.info(methodName + " <--->4 " + Arrays.asList(margs));
 						}
 						result = rpcMethod.invoke(rpcEndpoint, rpcInvocation.getArgs());
 						if (flag){
-							log.info(methodName + " <--->5 " + Arrays.asList(parameterTypes));
+							log.info(methodName + " <--->5 " + Arrays.asList(margs));
 						}
 					} catch (InvocationTargetException e) {
 						log.trace("Reporting back error thrown in remote procedure {}", rpcMethod, e);
@@ -281,7 +283,7 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 					if (result instanceof CompletableFuture) {
 
 						if (flag){
-							log.info(methodName + " <--->6 " + Arrays.asList(parameterTypes));
+							log.info(methodName + " <--->6 " + Arrays.asList(margs));
 						}
 
 						final CompletableFuture<?> future = (CompletableFuture<?>) result;
@@ -300,14 +302,14 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 					} else {
 
 						if (flag){
-							log.info(methodName + " <--->7 " + Arrays.asList(parameterTypes));
+							log.info(methodName + " <--->7 " + Arrays.asList(margs));
 						}
 
 						// tell the sender the result of the computation
 						getSender().tell(new Status.Success(result), getSelf());
 
 						if (flag){
-							log.info(methodName + " <--->8 " + Arrays.asList(parameterTypes));
+							log.info(methodName + " <--->8 " + Arrays.asList(margs));
 						}
 					}
 				}
