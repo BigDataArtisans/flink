@@ -18,6 +18,10 @@
 
 package org.apache.flink.runtime.rpc.akka;
 
+import akka.actor.ActorRef;
+import akka.actor.Status;
+import akka.actor.UntypedActor;
+import akka.pattern.Patterns;
 import org.apache.flink.runtime.concurrent.FutureUtils;
 import org.apache.flink.runtime.rpc.MainThreadValidatorUtil;
 import org.apache.flink.runtime.rpc.RpcEndpoint;
@@ -27,30 +31,20 @@ import org.apache.flink.runtime.rpc.akka.exceptions.AkkaRpcException;
 import org.apache.flink.runtime.rpc.akka.exceptions.AkkaUnknownMessageException;
 import org.apache.flink.runtime.rpc.akka.messages.Processing;
 import org.apache.flink.runtime.rpc.exceptions.RpcConnectionException;
-import org.apache.flink.runtime.rpc.messages.CallAsync;
-import org.apache.flink.runtime.rpc.messages.HandshakeSuccessMessage;
-import org.apache.flink.runtime.rpc.messages.LocalRpcInvocation;
-import org.apache.flink.runtime.rpc.messages.RemoteHandshakeMessage;
-import org.apache.flink.runtime.rpc.messages.RpcInvocation;
-import org.apache.flink.runtime.rpc.messages.RunAsync;
+import org.apache.flink.runtime.rpc.messages.*;
 import org.apache.flink.util.ExceptionUtils;
-
-import akka.actor.ActorRef;
-import akka.actor.Status;
-import akka.actor.UntypedActor;
-import akka.pattern.Patterns;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.concurrent.duration.FiniteDuration;
+import scala.concurrent.impl.Promise;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import scala.concurrent.duration.FiniteDuration;
-import scala.concurrent.impl.Promise;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -75,10 +69,14 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	/** the endpoint to invoke the methods on. */
+	/**
+	 * the endpoint to invoke the methods on.
+	 */
 	protected final T rpcEndpoint;
 
-	/** the helper that tracks whether calls come from the main thread. */
+	/**
+	 * the helper that tracks whether calls come from the main thread.
+	 */
 	private final MainThreadValidatorUtil mainThreadValidator;
 
 	private final CompletableFuture<Boolean> terminationFuture;
@@ -136,12 +134,12 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 		} else if (message.equals(Processing.STOP)) {
 			state = State.STOPPED;
 		} else if (state == State.STARTED) {
-			mainThreadValidator.enterMainThread();
+			// mainThreadValidator.enterMainThread();
 
 			try {
 				handleRpcMessage(message);
 			} finally {
-				mainThreadValidator.exitMainThread();
+				// mainThreadValidator.exitMainThread();
 			}
 		} else {
 			log.info("The rpc endpoint {} has not been started yet. Discarding message {} until processing is started.",
@@ -210,11 +208,22 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 	private void handleRpcInvocation(RpcInvocation rpcInvocation) {
 		Method rpcMethod = null;
 
+		String methodName = "";
+		Class<?>[] parameterTypes = new Class[0];
+
+		boolean flag = false;
+
 		try {
-			String methodName = rpcInvocation.getMethodName();
-			Class<?>[] parameterTypes = rpcInvocation.getParameterTypes();
+			methodName = rpcInvocation.getMethodName();
+			parameterTypes = rpcInvocation.getParameterTypes();
 
 			rpcMethod = lookupRpcMethod(methodName, parameterTypes);
+
+			if (methodName.equals("triggerSavepoint")
+				|| methodName.equals("heartbeatFromTaskManager")) {
+				flag = true;
+			}
+
 		} catch (ClassNotFoundException e) {
 			log.error("Could not load method arguments.", e);
 
@@ -232,21 +241,36 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 			getSender().tell(new Status.Failure(rpcException), getSelf());
 		}
 
+		if (flag){
+			log.info(methodName + " <--->1 " + Arrays.asList(parameterTypes));
+		}
+
 		if (rpcMethod != null) {
 			try {
 				// this supports declaration of anonymous classes
 				rpcMethod.setAccessible(true);
 
 				if (rpcMethod.getReturnType().equals(Void.TYPE)) {
+					if (flag){
+						log.info(methodName + " <--->2 " + Arrays.asList(parameterTypes));
+					}
 					// No return value to send back
 					rpcMethod.invoke(rpcEndpoint, rpcInvocation.getArgs());
-				}
-				else {
+					if (flag){
+						log.info(methodName + " <--->3 " + Arrays.asList(parameterTypes));
+					}
+
+				} else {
 					final Object result;
 					try {
+						if (flag){
+							log.info(methodName + " <--->4 " + Arrays.asList(parameterTypes));
+						}
 						result = rpcMethod.invoke(rpcEndpoint, rpcInvocation.getArgs());
-					}
-					catch (InvocationTargetException e) {
+						if (flag){
+							log.info(methodName + " <--->5 " + Arrays.asList(parameterTypes));
+						}
+					} catch (InvocationTargetException e) {
 						log.trace("Reporting back error thrown in remote procedure {}", rpcMethod, e);
 
 						// tell the sender about the failure
@@ -255,6 +279,11 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 					}
 
 					if (result instanceof CompletableFuture) {
+
+						if (flag){
+							log.info(methodName + " <--->6 " + Arrays.asList(parameterTypes));
+						}
+
 						final CompletableFuture<?> future = (CompletableFuture<?>) result;
 						Promise.DefaultPromise<Object> promise = new Promise.DefaultPromise<>();
 
@@ -269,8 +298,17 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 
 						Patterns.pipe(promise.future(), getContext().dispatcher()).to(getSender());
 					} else {
+
+						if (flag){
+							log.info(methodName + " <--->7 " + Arrays.asList(parameterTypes));
+						}
+
 						// tell the sender the result of the computation
 						getSender().tell(new Status.Success(result), getSelf());
+
+						if (flag){
+							log.info(methodName + " <--->8 " + Arrays.asList(parameterTypes));
+						}
 					}
 				}
 			} catch (Throwable e) {
@@ -317,12 +355,11 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 	private void handleRunAsync(RunAsync runAsync) {
 		if (runAsync.getRunnable() == null) {
 			log.warn("Received a {} message with an empty runnable field. This indicates " +
-				"that this message has been serialized prior to sending the message. The " +
-				"{} is only supported with local communication.",
+					"that this message has been serialized prior to sending the message. The " +
+					"{} is only supported with local communication.",
 				runAsync.getClass().getName(),
 				runAsync.getClass().getName());
-		}
-		else {
+		} else {
 			final long timeToRun = runAsync.getTimeNanos();
 			final long delayNanos;
 
@@ -334,8 +371,7 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 					log.error("Caught exception while executing runnable in main thread.", t);
 					ExceptionUtils.rethrowIfFatalErrorOrOOM(t);
 				}
-			}
-			else {
+			} else {
 				// schedule for later. send a new message after the delay, which will then be immediately executed
 				FiniteDuration delay = new FiniteDuration(delayNanos, TimeUnit.NANOSECONDS);
 				RunAsync message = new RunAsync(runAsync.getRunnable(), timeToRun);
@@ -343,7 +379,7 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 				final Object envelopedSelfMessage = envelopeSelfMessage(message);
 
 				getContext().system().scheduler().scheduleOnce(delay, getSelf(), envelopedSelfMessage,
-						getContext().dispatcher(), ActorRef.noSender());
+					getContext().dispatcher(), ActorRef.noSender());
 			}
 		}
 	}
@@ -351,11 +387,11 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends UntypedActor {
 	/**
 	 * Look up the rpc method on the given {@link RpcEndpoint} instance.
 	 *
-	 * @param methodName Name of the method
+	 * @param methodName     Name of the method
 	 * @param parameterTypes Parameter types of the method
 	 * @return Method of the rpc endpoint
 	 * @throws NoSuchMethodException Thrown if the method with the given name and parameter types
-	 * 									cannot be found at the rpc endpoint
+	 *                               cannot be found at the rpc endpoint
 	 */
 	private Method lookupRpcMethod(final String methodName, final Class<?>[] parameterTypes) throws NoSuchMethodException {
 		return rpcEndpoint.getClass().getMethod(methodName, parameterTypes);

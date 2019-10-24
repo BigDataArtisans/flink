@@ -872,6 +872,13 @@ public class CheckpointCoordinator {
 		// the 'min delay between checkpoints'
 		lastCheckpointCompletionNanos = System.nanoTime();
 
+		try {
+			// System.out.println("completed sleep 2min");
+			// TimeUnit.MINUTES.sleep(2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 		LOG.info("Completed checkpoint {} for job {} ({} bytes in {} ms).", checkpointId, job,
 			completedCheckpoint.getStateSize(), completedCheckpoint.getDuration());
 
