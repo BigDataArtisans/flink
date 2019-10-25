@@ -15,12 +15,17 @@ export YARN_HOME_DIR=/work/BigData/install/hadoop/hadoop-2.6.0/etc/hadoop
 cd ${FLINK_PROJECT}/flink-dist/target/flink-1.6.7-bin/flink-1.6.7
 \cp /work/BigData/install/flink/config/flink-conf.yaml conf
 
-bin/flink run -m yarn-cluster -d -yn 1 examples/streaming/SocketWindowWordCount.jar --hostname 10.102.147.255 --port 9999
+bin/flink run -m yarn-cluster -d -yn 1 examples/streaming/SocketWindowWordCount.jar
 
 
-/bin/bash bin/flink savepoint b8404acda81f25b87171f1e1d2839cb9 -yid application_1570170136016_0480
+/bin/bash bin/flink savepoint 9286756f9d0b7d6eef6c12d36f5153a0 -yid application_1570170136016_0503
 
 
+
+RemoteRpcInvocation(heartbeatFromTaskManager(ResourceID, SlotReport))
+RemoteRpcInvocation(heartbeatFromTaskManager(ResourceID, AccumulatorReport))
+LocalRpcInvocation(triggerSavepoint(JobID, String, boolean, Time))
+LocalRpcInvocation(triggerSavepoint(String, boolean, Time))
 
 
 org.apache.flink.runtime.rpc.akka.AkkaRpcActor#handleRpcInvocation
