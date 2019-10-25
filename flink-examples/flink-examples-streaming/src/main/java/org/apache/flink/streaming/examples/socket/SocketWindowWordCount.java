@@ -23,8 +23,10 @@ import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
+import sun.awt.windows.ThemeReader;
 
 /**
  * Implements a streaming windowed version of the "WordCount" program.
@@ -42,28 +44,27 @@ public class SocketWindowWordCount {
 
 	public static void main(String[] args) throws Exception {
 
-		// the host and the port to connect to
-		final String hostname;
-		final int port;
-		try {
-			final ParameterTool params = ParameterTool.fromArgs(args);
-			hostname = params.has("hostname") ? params.get("hostname") : "localhost";
-			port = params.getInt("port");
-		} catch (Exception e) {
-			System.err.println("No port specified. Please run 'SocketWindowWordCount " +
-				"--hostname <hostname> --port <port>', where hostname (localhost by default) " +
-				"and port is the address of the text server");
-			System.err.println("To start a simple text server, run 'netcat -l <port>' and " +
-				"type the input text into the command line");
-			return;
-		}
+
 
 		// get the execution environment
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.enableCheckpointing(5000);
 
 		// get input data by connecting to the socket
-		DataStream<String> text = env.socketTextStream(hostname, port, "\n");
+		DataStream<String> text = env.addSource(new SourceFunction<String>() {
+			@Override
+			public void run(SourceContext<String> ctx) throws Exception {
+				while (true){
+					ctx.collect("source");
+					Thread.sleep(1000);
+				}
+			}
+
+			@Override
+			public void cancel() {
+
+			}
+		});
 
 		// parse the data, group it, window it, and aggregate the counts
 		DataStream<WordWithCount> windowCounts = text
