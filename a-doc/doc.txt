@@ -18,14 +18,24 @@ cd ${FLINK_PROJECT}/flink-dist/target/flink-1.6.7-bin/flink-1.6.7
 bin/flink run -m yarn-cluster -d -yn 1 examples/streaming/SocketWindowWordCount.jar
 
 
-/bin/bash bin/flink savepoint 9286756f9d0b7d6eef6c12d36f5153a0 -yid application_1570170136016_0503
-
+/bin/bash bin/flink savepoint cfb26fa3dbec87cafa62af0424d0b512 -yid application_1570170136016_0512
 
 
 RemoteRpcInvocation(heartbeatFromTaskManager(ResourceID, SlotReport))
 RemoteRpcInvocation(heartbeatFromTaskManager(ResourceID, AccumulatorReport))
 LocalRpcInvocation(triggerSavepoint(JobID, String, boolean, Time))
 LocalRpcInvocation(triggerSavepoint(String, boolean, Time))
+
+class org.apache.flink.runtime.dispatcher.MiniDispatcher  LocalRpcInvocation(triggerSavepoint(JobID, String, boolean, Time))
+[class org.apache.flink.api.common.JobID, class java.lang.String, boolean, class org.apache.flink.api.common.time.Time]
+[public java.util.concurrent.CompletableFuture org.apache.flink.runtime.dispatcher.Dispatcher.triggerSavepoint(org.apache.flink.api.common.JobID,java.lang.String,boolean,org.apache.flink.api.common.time.Time)]
+-----111------
+
+class org.apache.flink.runtime.jobmaster.JobMaster  LocalRpcInvocation(triggerSavepoint(String, boolean, Time))
+[class java.lang.String, boolean, class org.apache.flink.api.common.time.Time]
+[public java.util.concurrent.CompletableFuture org.apache.flink.runtime.jobmaster.JobMaster.triggerSavepoint(java.lang.String,boolean,org.apache.flink.api.common.time.Time)]
+-----111------
+
 
 
 org.apache.flink.runtime.rpc.akka.AkkaRpcActor#handleRpcInvocation
