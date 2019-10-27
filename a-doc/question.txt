@@ -6,3 +6,28 @@
 2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->6 [6cef242a39018545007541cdf75bd856, hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
 2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->1 [hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
 2019-10-24 10:34:35,566 INFO  org.apache.flink.runtime.rpc.akka.FencedAkkaRpcActor          - triggerSavepoint <--->4 [hdfs:///flink/dev/flink-savepoints, false, 21474835000 ms]
+
+
+2, 在AkkaRpcActor#handleRpcInvocation 添加 ，只会打印，程序不会重启
+
+2019-10-28 01:41:05,571 INFO  org.apache.flink.yarn.YarnResourceManager                     - The heartbeat of JobManager with id a6cc9e63d102bb88b21fc1b529098c19 timed out.
+2019-10-28 01:41:05,571 INFO  org.apache.flink.yarn.YarnResourceManager                     - Disconnect job manager b07d9784dae74ce691bbb9a0c8234ade@akka.tcp://flink@spslave5.bigdata.ly:61527/user/jobmanager_0 for job f5b127e84bd65109131b62eb69c9615a from the resource manager.
+
+
+if (methodName.equals("triggerSavepoint")) {
+
+
+				if (rpcEndpoint.getClass().toString().contains("JobMaster")) {
+					System.out.println("triggerSavepoint ...." + Thread.currentThread().getName());
+					try {
+						Thread.sleep(10000000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					flag = true;
+				}
+
+
+
+			}
