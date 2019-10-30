@@ -18,7 +18,7 @@ cd ${FLINK_PROJECT}/flink-dist/target/flink-1.6.7-bin/flink-1.6.7
 bin/flink run -m yarn-cluster -d -yn 1 examples/streaming/SocketWindowWordCount.jar
 
 
-/bin/bash bin/flink savepoint cfb26fa3dbec87cafa62af0424d0b512 -yid application_1570170136016_0512
+/bin/bash bin/flink savepoint 8e58e6a398a2cdfecb6550b3e1ce84ea -yid application_1570170136016_0739
 
 
 RemoteRpcInvocation(heartbeatFromTaskManager(ResourceID, SlotReport))
